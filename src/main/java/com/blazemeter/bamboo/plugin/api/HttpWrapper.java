@@ -35,14 +35,33 @@ public class HttpWrapper {
     private HttpHost proxy=null;
 
     public HttpWrapper() {
-        this.httpClient = HttpClients.createDefault();
-        useProxy=Boolean.parseBoolean(System.getProperty(Constants.USE_PROXY));
-        proxyHost=System.getProperty(Constants.PROXY_HOST);
+        try {
+            logger.info("Creating http client");
+            this.httpClient = HttpClients.createDefault();
+        } catch (Exception e) {
+            logger.error("Failed to create http client");
+        }
+        try {
+            logger.info("Reading http.useProxy");
+            useProxy = Boolean.parseBoolean(System.getProperty(Constants.USE_PROXY));
+            logger.info("http.useProxy = " + useProxy);
+        } catch (Exception e) {
+            logger.error("Failed to read http.useProxy");
+        }
+        try {
+            logger.info("Reading http.proxyHost");
+            proxyHost = System.getProperty(Constants.PROXY_HOST);
+            logger.info("http.proxyHost = " + proxyHost);
+        } catch (Exception e) {
+            logger.error("Failed to read http.proxyHost");
+        }
 
-        try{
-            this.proxyPort=Integer.parseInt(System.getProperty(Constants.PROXY_PORT));
-        }catch (NumberFormatException nfe){
-            logger.warn("Failed to read http.proxyPort: ",nfe);
+        try {
+            logger.info("Reading http.proxyPort");
+            this.proxyPort = Integer.parseInt(System.getProperty(Constants.PROXY_PORT));
+            logger.info("http.proxyport = " + proxyPort);
+        } catch (NumberFormatException nfe) {
+            logger.warn("Failed to read http.proxyPort: ", nfe);
         }
 
         if(useProxy&&!org.apache.commons.lang3.StringUtils.isBlank(this.proxyHost)){

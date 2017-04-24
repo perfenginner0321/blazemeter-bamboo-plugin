@@ -21,28 +21,55 @@ import com.blazemeter.bamboo.plugin.ServiceManager;
 import com.blazemeter.bamboo.plugin.servlet.AdminServlet.Config;
 import com.google.common.collect.ImmutableList;
 import com.opensymphony.xwork.TextProvider;
+import org.apache.log4j.Logger;
 
 public class ConfigTask extends AbstractTaskConfigurator implements BuildTaskRequirementSupport{
 
 	private static final List<String> FIELDS_TO_COPY = ImmutableList.of(Constants.SETTINGS_SELECTED_TEST_ID);
     private Api api;
+	private static final Logger logger = Logger.getLogger(ConfigTask.class);
 
 	private TextProvider textProvider;
-	
+
 	public ConfigTask() {
 		super();
 	}
 
 	@Override
 	public void populateContextForCreate(Map<String, Object> context) {
+		logger.info("BlazeMeter task will be created...");
 		super.populateContextForCreate(context);
-        PluginSettingsFactory pluginSettingsFactory=StaticAccessor.getSettingsFactory();
-        PluginSettings pluginSettings = pluginSettingsFactory.createGlobalSettings();
-		String userKey = (String) pluginSettings.get(Config.class.getName() + AdminServletConst.DOT_USER_KEY);
-		String serverUrl = (String) pluginSettings.get(Config.class.getName() + AdminServletConst.DOT_SERVER_URL);
-		context.put(AdminServletConst.URL, serverUrl);
-		this.api= new ApiV3Impl(userKey,serverUrl);
-		context.put(Constants.TEST_LIST, ServiceManager.getTestsAsMap(api));
+		PluginSettingsFactory pluginSettingsFactory = StaticAccessor.getSettingsFactory();
+		logger.info("pluginSettingFactory was created...");
+		PluginSettings pluginSettings = pluginSettingsFactory.createGlobalSettings();
+		logger.info("pluginSettings was created...");
+		String userKey = null;
+		try {
+			userKey = (String) pluginSettings.get(Config.class.getName() + AdminServletConst.DOT_USER_KEY);
+			logger.info("userKey was read from pluginSettings: value = " + userKey);
+		} catch (Exception e) {
+			logger.error("Failed to read userKey from pluginSettings");
+		}
+		String serverUrl = null;
+		try {
+			serverUrl = (String) pluginSettings.get(Config.class.getName() + AdminServletConst.DOT_SERVER_URL);
+			logger.info("Read serverUrl from pluginSettings: value = " + serverUrl);
+		} catch (Exception e) {
+			logger.error("Failed to read serverUrl from pluginSettings");
+		}
+		try {
+			context.put(AdminServletConst.URL, serverUrl);
+			logger.info("serverUrl was put to context");
+		} catch (Exception e) {
+			logger.error("Failed to put serverUrl to context");
+		}
+		try {
+			this.api = new ApiV3Impl(userKey, serverUrl);
+			context.put(Constants.TEST_LIST, ServiceManager.getTestsAsMap(api));
+			logger.info("testList was put to context");
+		} catch (Exception e) {
+			logger.error("Failed to put testList to context");
+		}
 	}
 
 	@Override
@@ -100,7 +127,7 @@ public class ConfigTask extends AbstractTaskConfigurator implements BuildTaskReq
 }
 
 
-	
+
 	@Override
 	public Map<String, String> generateTaskConfigMap(ActionParametersMap params, TaskDefinition previousTaskDefinition) {
 		final Map<String, String> config = super.generateTaskConfigMap(params, previousTaskDefinition);
